@@ -1,11 +1,11 @@
 // Configuration - MODIFY THESE VALUES BEFORE DEPLOYING
 const CONFIG = {
-  defaultTemperature: 0.7,
+  defaultTemperature: 0.2,
   defaultMode: "direct",
   defaultMaxTokens: 1000,
-  apiKey: "YOUR_API_KEY_HERE", // Replace with your actual API key
-  knowledgeModelId: "YOUR_KNOWLEDGE_MODEL_ID_HERE", // Replace with your knowledge model ID
-  defaultLlmAlias: "gpt-4" // Replace with your preferred model
+  apiKey: "vaZE1kubUUMfXVZH8tLueGWbG9g3cuJn3i87Yy9MHmpxuesp8LO7Vp5VnRJiH21W", // Replace with your actual API key
+  knowledgeModelId: "34a5610d304340f9882854ff9b6d14ba", // Replace with your knowledge model ID
+  defaultLlmAlias: "gpt-4.1" // Replace with your default model
 };
 
 /**

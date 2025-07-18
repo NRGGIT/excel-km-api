@@ -10,11 +10,11 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="CONSTRUCT Function"/>
   <Description DefaultValue="AI-powered Excel custom function"/>
-  <IconUrl DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/icon-64.png"/>
-  <SupportUrl DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/"/>
+  <IconUrl DefaultValue="https://NRGGIT.github.io/excel-km-api/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://NRGGIT.github.io/excel-km-api/icon-64.png"/>
+  <SupportUrl DefaultValue="https://NRGGIT.github.io/excel-km-api/"/>
   <AppDomains>
-    <AppDomain>https://YOUR_USERNAME.github.io</AppDomain>
+    <AppDomain>https://NRGGIT.github.io</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook"/>
@@ -25,7 +25,7 @@
     </Sets>
   </Requirements>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/taskpane.html"/>
+    <SourceLocation DefaultValue="https://NRGGIT.github.io/excel-km-api/taskpane.html"/>
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
@@ -49,9 +49,9 @@
     </Hosts>
     <Resources>
       <bt:Urls>
-        <bt:Url id="HTML-URL" DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/functions.html"/>
-        <bt:Url id="JS-URL" DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/functions.js"/>
-        <bt:Url id="JSON-URL" DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/functions.json"/>
+        <bt:Url id="HTML-URL" DefaultValue="https://NRGGIT.github.io/excel-km-api/functions.html"/>
+        <bt:Url id="JS-URL" DefaultValue="https://NRGGIT.github.io/excel-km-api/functions.js"/>
+        <bt:Url id="JSON-URL" DefaultValue="https://NRGGIT.github.io/excel-km-api/functions.json"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="namespace" DefaultValue="CONSTRUCT"/>
