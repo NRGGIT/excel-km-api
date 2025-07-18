@@ -1,7 +1,7 @@
 {
   "functions": [
     {
-      "description": "AI-powered text generation using Constructor.app API (Test Version)",
+      "description": "AI-powered text generation using Constructor.app API",
       "id": "CONSTRUCT",
       "name": "CONSTRUCT",
       "parameters": [
@@ -38,30 +38,6 @@
           "name": "llmAlias",
           "type": "string",
           "optional": true
-        }
-      ],
-      "result": {
-        "type": "string"
-      }
-    },
-    {
-      "description": "Simple test function to verify add-in is working",
-      "id": "HELLO_WORLD",
-      "name": "HELLO_WORLD",
-      "parameters": [],
-      "result": {
-        "type": "string"
-      }
-    },
-    {
-      "description": "Test function with parameter",
-      "id": "GREET",
-      "name": "GREET",
-      "parameters": [
-        {
-          "description": "Your name",
-          "name": "name",
-          "type": "string"
         }
       ],
       "result": {

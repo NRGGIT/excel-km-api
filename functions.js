@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 /**
- * Test version of CONSTRUCT function - No API calls
+ * AI-powered text generation using Constructor.app API
  * @customfunction
  * @param {string} userPrompt User prompt text
  * @param {string} systemPrompt System prompt text
@@ -17,17 +17,31 @@ const CONFIG = {
  * @param {string} [mode] Mode: direct, model, or optative_rag (optional)
  * @param {number} [maxTokens] Max tokens (1-4096, optional)
  * @param {string} [llmAlias] LLM alias (optional)
- * @returns {string} Mock response for testing
+ * @returns {Promise<string>} Generated text response
  */
-function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens, llmAlias) {
+async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens, llmAlias) {
   try {
-    // Use default values if parameters not provided
-    const finalTemperature = temperature ?? 0.7;
-    const finalMode = mode ?? "direct";
-    const finalMaxTokens = maxTokens ?? 1000;
-    const finalLlmAlias = llmAlias ?? "gpt-4";
+    // Special test mode - if userPrompt is "TEST", return test message
+    if (userPrompt.toUpperCase() === "TEST") {
+      return "✅ CONSTRUCT function is working perfectly! Ready for API integration.";
+    }
     
-    // Validate parameters (same validation as real function)
+    // Check if we have required config
+    if (!CONFIG.apiKey || CONFIG.apiKey === "YOUR_API_KEY_HERE") {
+      return "ERROR: Please configure your API key in functions.js";
+    }
+    
+    if (!CONFIG.knowledgeModelId || CONFIG.knowledgeModelId === "YOUR_KNOWLEDGE_MODEL_ID_HERE") {
+      return "ERROR: Please configure your knowledge model ID in functions.js";
+    }
+    
+    // Use default values if parameters not provided
+    const finalTemperature = temperature ?? CONFIG.defaultTemperature;
+    const finalMode = mode ?? CONFIG.defaultMode;
+    const finalMaxTokens = maxTokens ?? CONFIG.defaultMaxTokens;
+    const finalLlmAlias = llmAlias ?? CONFIG.defaultLlmAlias;
+    
+    // Validate parameters
     if (finalTemperature < 0 || finalTemperature > 2) {
       return "ERROR: Temperature must be between 0 and 2";
     }
@@ -40,37 +54,135 @@ function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens, llmAl
       return "ERROR: Max tokens must be between 1 and 4096";
     }
     
-    // Return mock response with all parameters
-    return `🤖 MOCK RESPONSE:
-User: "${userPrompt}"
-System: "${systemPrompt}"
-Settings: temp=${finalTemperature}, mode=${finalMode}, tokens=${finalMaxTokens}, model=${finalLlmAlias}
-✅ Add-in is working! Ready for real API integration.`;
+    // Make real API request
+    const result = await makeModelRequest(
+      CONFIG.knowledgeModelId,
+      CONFIG.apiKey,
+      finalLlmAlias,
+      finalTemperature,
+      finalMaxTokens,
+      systemPrompt,
+      userPrompt
+    );
+    
+    return result;
     
   } catch (error) {
-    return `ERROR: ${error.toString()}`;
+    return `ERROR: ${error.message}`;
   }
 }
 
 /**
- * Simple test function
- * @customfunction
+ * Make API request to Constructor.app with CORS handling
  */
-function HELLO_WORLD() {
-  return "Hello from Excel Custom Function! 🎉";
+async function makeModelRequest(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt) {
+  const endpoint = `https://training.constructor.app/api/platform-kmapi/v1/knowledge-models/${knowledgeModelId}/chat/completions`;
+  
+  const requestBody = {
+    "model": modelId,
+    "messages": [
+      {
+        "role": "system",
+        "content": [
+          {
+            "type": "text",
+            "text": systemPrompt
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": userPrompt
+          }
+        ]
+      }
+    ],
+    "temperature": temperature,
+    "max_completion_tokens": maxTokens,
+    "top_p": 1,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+    "stream": false
+  };
+  
+  try {
+    // Try direct request first
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        "X-KM-AccessKey": `Bearer ${apiKey}`,
+        "X-KM-Extension": "direct_llm",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody),
+      mode: 'cors'
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
+    const responseData = await response.json();
+    
+    if (responseData.choices && responseData.choices.length > 0) {
+      return responseData.choices[0].message.content;
+    } else {
+      throw new Error("No response from API");
+    }
+    
+  } catch (error) {
+    // If direct request fails due to CORS, try with a proxy
+    if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+      return await makeRequestWithProxy(endpoint, requestBody, apiKey);
+    }
+    throw error;
+  }
 }
 
 /**
- * Function to test with parameters
- * @customfunction
- * @param {string} name Your name
- * @returns {string} Greeting message
+ * Fallback: Make request through CORS proxy
  */
-function GREET(name) {
-  return `Hello ${name}! The custom function is working perfectly! 👋`;
+async function makeRequestWithProxy(endpoint, requestBody, apiKey) {
+  try {
+    // Using allorigins.win as CORS proxy
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(endpoint)}`;
+    
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        method: 'POST',
+        headers: {
+          "X-KM-AccessKey": `Bearer ${apiKey}`,
+          "X-KM-Extension": "direct_llm",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Proxy request failed: ${response.status}`);
+    }
+    
+    const responseData = await response.json();
+    
+    if (responseData.choices && responseData.choices.length > 0) {
+      return responseData.choices[0].message.content;
+    } else {
+      throw new Error("No response from API via proxy");
+    }
+    
+  } catch (error) {
+    throw new Error(`Both direct and proxy requests failed: ${error.message}`);
+  }
 }
 
-// Register the custom functions
+// Register only the main function
 CustomFunctions.associate("CONSTRUCT", CONSTRUCT);
-CustomFunctions.associate("HELLO_WORLD", HELLO_WORLD);
-CustomFunctions.associate("GREET", GREET);
