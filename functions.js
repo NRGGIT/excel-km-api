@@ -21,14 +21,9 @@ const CONFIG = {
  */
 async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens, llmAlias) {
   try {
-    // Special test mode - if userPrompt is "TEST", return test message
+    // Special test mode
     if (userPrompt.toUpperCase() === "TEST") {
-      return "✅ CONSTRUCT function is working perfectly! Ready for API integration.";
-    }
-    
-    // Debug mode - if userPrompt is "DEBUG", return config info
-    if (userPrompt.toUpperCase() === "DEBUG") {
-      return `Config: API Key ${CONFIG.apiKey ? 'SET' : 'NOT SET'}, Model ID ${CONFIG.knowledgeModelId ? 'SET' : 'NOT SET'}`;
+      return "✅ CONSTRUCT function is working perfectly!";
     }
     
     // Check if we have required config
@@ -59,8 +54,8 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
       return "ERROR: Max tokens must be between 1 and 4096";
     }
     
-    // Make API request with detailed error reporting
-    const result = await makeModelRequestWithDebug(
+    // Try the simplest proxy approach
+    const result = await makeSimpleProxyRequest(
       CONFIG.knowledgeModelId,
       CONFIG.apiKey,
       finalLlmAlias,
@@ -78,10 +73,13 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
 }
 
 /**
- * Make API request with detailed debugging
+ * Simple proxy request using corsproxy.io
  */
-async function makeModelRequestWithDebug(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt) {
-  const endpoint = `https://training.constructor.app/api/platform-kmapi/v1/knowledge-models/${knowledgeModelId}/chat/completions`;
+async function makeSimpleProxyRequest(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt) {
+  const originalEndpoint = `https://training.constructor.app/api/platform-kmapi/v1/knowledge-models/${knowledgeModelId}/chat/completions`;
+  
+  // Use corsproxy.io - a reliable CORS proxy
+  const proxyEndpoint = `https://corsproxy.io/?${encodeURIComponent(originalEndpoint)}`;
   
   const requestBody = {
     "model": modelId,
@@ -113,100 +111,8 @@ async function makeModelRequestWithDebug(knowledgeModelId, apiKey, modelId, temp
     "stream": false
   };
   
-  // Try multiple approaches
-  
-  // Approach 1: Direct request
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        "X-KM-AccessKey": `Bearer ${apiKey}`,
-        "X-KM-Extension": "direct_llm",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody),
-      mode: 'cors'
-    });
-    
-    const responseText = await response.text();
-    
-    if (!response.ok) {
-      throw new Error(`Direct request failed: HTTP ${response.status} - ${responseText}`);
-    }
-    
-    const responseData = JSON.parse(responseText);
-    
-    if (responseData.choices && responseData.choices.length > 0) {
-      return responseData.choices[0].message.content;
-    } else {
-      throw new Error(`Direct request: Unexpected response format - ${JSON.stringify(responseData)}`);
-    }
-    
-  } catch (directError) {
-    // Approach 2: Try different CORS proxy
-    try {
-      return await makeRequestWithCorsAnywhere(endpoint, requestBody, apiKey);
-    } catch (corsError) {
-      // Approach 3: Try another proxy
-      try {
-        return await makeRequestWithAllOrigins(endpoint, requestBody, apiKey);
-      } catch (allOriginsError) {
-        // Return detailed error information
-        return `DETAILED ERROR REPORT:
-Direct: ${directError.message}
-CORS Anywhere: ${corsError.message}
-AllOrigins: ${allOriginsError.message}`;
-      }
-    }
-  }
-}
-
-/**
- * Try with cors-anywhere proxy
- */
-async function makeRequestWithCorsAnywhere(endpoint, requestBody, apiKey) {
-  const proxyUrl = `https://cors-anywhere.herokuapp.com/${endpoint}`;
-  
-  const response = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      "X-KM-AccessKey": `Bearer ${apiKey}`,
-      "X-KM-Extension": "direct_llm",
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest"
-    },
-    body: JSON.stringify(requestBody)
-  });
-  
-  const responseText = await response.text();
-  
-  if (!response.ok) {
-    throw new Error(`CORS Anywhere: HTTP ${response.status} - ${responseText}`);
-  }
-  
-  const responseData = JSON.parse(responseText);
-  
-  if (responseData.choices && responseData.choices.length > 0) {
-    return responseData.choices[0].message.content;
-  } else {
-    throw new Error(`CORS Anywhere: Unexpected response - ${JSON.stringify(responseData)}`);
-  }
-}
-
-/**
- * Try with allorigins proxy (different approach)
- */
-async function makeRequestWithAllOrigins(endpoint, requestBody, apiKey) {
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(endpoint)}`;
-  
-  // Create a proper POST request through the proxy
-  const proxyResponse = await fetch('https://api.allorigins.win/get', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url: endpoint,
+    const response = await fetch(proxyEndpoint, {
       method: 'POST',
       headers: {
         "X-KM-AccessKey": `Bearer ${apiKey}`,
@@ -214,21 +120,28 @@ async function makeRequestWithAllOrigins(endpoint, requestBody, apiKey) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(requestBody)
-    })
-  });
-  
-  const proxyResult = await proxyResponse.json();
-  
-  if (!proxyResponse.ok || !proxyResult.contents) {
-    throw new Error(`AllOrigins proxy failed: ${proxyResult.status || 'Unknown error'}`);
-  }
-  
-  const responseData = JSON.parse(proxyResult.contents);
-  
-  if (responseData.choices && responseData.choices.length > 0) {
-    return responseData.choices[0].message.content;
-  } else {
-    throw new Error(`AllOrigins: Unexpected response - ${JSON.stringify(responseData)}`);
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}`);
+    }
+    
+    const responseData = await response.json();
+    
+    if (responseData.choices && responseData.choices.length > 0 && responseData.choices[0].message) {
+      return responseData.choices[0].message.content;
+    } else if (responseData.error) {
+      throw new Error(`API Error: ${responseData.error.message || JSON.stringify(responseData.error)}`);
+    } else {
+      throw new Error(`Unexpected response format: ${JSON.stringify(responseData).substring(0, 200)}`);
+    }
+    
+  } catch (error) {
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Network error: Unable to reach the API. Please check your internet connection.');
+    }
+    throw error;
   }
 }
 
