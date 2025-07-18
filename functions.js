@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 /**
- * AI-powered text generation using Constructor.app API
+ * Test version of CONSTRUCT function - No API calls
  * @customfunction
  * @param {string} userPrompt User prompt text
  * @param {string} systemPrompt System prompt text
@@ -17,17 +17,17 @@ const CONFIG = {
  * @param {string} [mode] Mode: direct, model, or optative_rag (optional)
  * @param {number} [maxTokens] Max tokens (1-4096, optional)
  * @param {string} [llmAlias] LLM alias (optional)
- * @returns {Promise<string>} Generated text response
+ * @returns {string} Mock response for testing
  */
-async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens, llmAlias) {
+function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens, llmAlias) {
   try {
     // Use default values if parameters not provided
-    const finalTemperature = temperature ?? CONFIG.defaultTemperature;
-    const finalMode = mode ?? CONFIG.defaultMode;
-    const finalMaxTokens = maxTokens ?? CONFIG.defaultMaxTokens;
-    const finalLlmAlias = llmAlias ?? CONFIG.defaultLlmAlias;
+    const finalTemperature = temperature ?? 0.7;
+    const finalMode = mode ?? "direct";
+    const finalMaxTokens = maxTokens ?? 1000;
+    const finalLlmAlias = llmAlias ?? "gpt-4";
     
-    // Validate parameters
+    // Validate parameters (same validation as real function)
     if (finalTemperature < 0 || finalTemperature > 2) {
       return "ERROR: Temperature must be between 0 and 2";
     }
@@ -40,112 +40,37 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
       return "ERROR: Max tokens must be between 1 and 4096";
     }
     
-    // Check if we have required config
-    if (!CONFIG.apiKey || CONFIG.apiKey === "YOUR_API_KEY_HERE") {
-      return "ERROR: API key not configured";
-    }
-    
-    if (!CONFIG.knowledgeModelId || CONFIG.knowledgeModelId === "YOUR_KNOWLEDGE_MODEL_ID_HERE") {
-      return "ERROR: Knowledge model ID not configured";
-    }
-    
-    // Make API request with better error handling
-    const result = await makeModelRequestWithRetry(
-      CONFIG.knowledgeModelId,
-      CONFIG.apiKey,
-      finalLlmAlias,
-      finalTemperature,
-      finalMaxTokens,
-      systemPrompt,
-      userPrompt
-    );
-    
-    return result;
+    // Return mock response with all parameters
+    return `🤖 MOCK RESPONSE:
+User: "${userPrompt}"
+System: "${systemPrompt}"
+Settings: temp=${finalTemperature}, mode=${finalMode}, tokens=${finalMaxTokens}, model=${finalLlmAlias}
+✅ Add-in is working! Ready for real API integration.`;
     
   } catch (error) {
-    return `ERROR: ${error.message}`;
+    return `ERROR: ${error.toString()}`;
   }
 }
 
 /**
- * Make API request with retry logic and better error handling
+ * Simple test function
+ * @customfunction
  */
-async function makeModelRequestWithRetry(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt, retries = 2) {
-  const endpoint = `https://training.constructor.app/api/platform-kmapi/v1/knowledge-models/${knowledgeModelId}/chat/completions`;
-  
-  const requestBody = {
-    "model": modelId,
-    "messages": [
-      {
-        "role": "system",
-        "content": [
-          {
-            "type": "text",
-            "text": systemPrompt
-          }
-        ]
-      },
-      {
-        "role": "user",
-        "content": [
-          {
-            "type": "text",
-            "text": userPrompt
-          }
-        ]
-      }
-    ],
-    "temperature": temperature,
-    "max_completion_tokens": maxTokens,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
-    "stream": false
-  };
-  
-  const requestOptions = {
-    method: 'POST',
-    headers: {
-      "X-KM-AccessKey": `Bearer ${apiKey}`,
-      "X-KM-Extension": "direct_llm",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(requestBody),
-    mode: 'cors', // Explicitly set CORS mode
-    credentials: 'omit' // Don't send credentials
-  };
-  
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(endpoint, requestOptions);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-      
-      const responseData = await response.json();
-      
-      if (responseData.choices && responseData.choices.length > 0) {
-        return responseData.choices[0].message.content;
-      } else {
-        throw new Error("No response from API");
-      }
-      
-    } catch (error) {
-      if (attempt === retries) {
-        // Last attempt failed
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error('Network error: Check your internet connection and API endpoint. CORS may be blocking the request.');
-        }
-        throw error;
-      }
-      
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-    }
-  }
+function HELLO_WORLD() {
+  return "Hello from Excel Custom Function! 🎉";
 }
 
-// Register the custom function
+/**
+ * Function to test with parameters
+ * @customfunction
+ * @param {string} name Your name
+ * @returns {string} Greeting message
+ */
+function GREET(name) {
+  return `Hello ${name}! The custom function is working perfectly! 👋`;
+}
+
+// Register the custom functions
 CustomFunctions.associate("CONSTRUCT", CONSTRUCT);
+CustomFunctions.associate("HELLO_WORLD", HELLO_WORLD);
+CustomFunctions.associate("GREET", GREET);
