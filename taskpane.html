@@ -12,6 +12,7 @@
         .info { background: #f3f2f1; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
         .example { background: #fff; border: 1px solid #edebe9; padding: 15px; border-radius: 4px; margin: 10px 0; }
         code { background: #f8f8f8; padding: 2px 4px; border-radius: 3px; font-family: 'Courier New', monospace; }
+        .test-mode { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -20,32 +21,43 @@
         <p>AI-powered text generation for Excel</p>
     </div>
     
+    <div class="test-mode">
+        <h3>🧪 Test Mode Active</h3>
+        <p>Currently running in test mode with mock responses. No API calls are made.</p>
+    </div>
+    
     <div class="info">
-        <h3>How to use:</h3>
-        <p>Use the CONSTRUCT function in any cell:</p>
-        <code>=CONSTRUCT.CONSTRUCT("user prompt", "system prompt")</code>
+        <h3>Test Functions:</h3>
+        <p>Try these functions to verify the add-in is working:</p>
     </div>
     
     <div class="example">
-        <h4>Basic Example:</h4>
+        <h4>1. Simple Test:</h4>
+        <code>=CONSTRUCT.HELLO_WORLD()</code>
+        <p>Should return: "Hello from Excel Custom Function! 🎉"</p>
+    </div>
+    
+    <div class="example">
+        <h4>2. Test with Parameter:</h4>
+        <code>=CONSTRUCT.GREET("Your Name")</code>
+        <p>Should return a personalized greeting</p>
+    </div>
+    
+    <div class="example">
+        <h4>3. Main Function Test:</h4>
         <code>=CONSTRUCT.CONSTRUCT("What is AI?", "You are a helpful assistant")</code>
+        <p>Should return a mock response with your parameters</p>
     </div>
     
     <div class="example">
-        <h4>With Parameters:</h4>
+        <h4>4. Full Parameters Test:</h4>
         <code>=CONSTRUCT.CONSTRUCT("Explain quantum computing", "You are a physics professor", 0.5, "direct", 500, "gpt-4")</code>
+        <p>Should return a mock response showing all parameters</p>
     </div>
     
     <div class="info">
-        <h3>Parameters:</h3>
-        <ul>
-            <li><strong>userPrompt</strong> (required): Your question or prompt</li>
-            <li><strong>systemPrompt</strong> (required): Instructions for the AI</li>
-            <li><strong>temperature</strong> (optional): 0-2, controls randomness</li>
-            <li><strong>mode</strong> (optional): "direct", "model", or "optative_rag"</li>
-            <li><strong>maxTokens</strong> (optional): 1-4096, response length limit</li>
-            <li><strong>llmAlias</strong> (optional): Model to use</li>
-        </ul>
+        <h3>Expected Results:</h3>
+        <p>If you see mock responses with your input text, the add-in is working correctly and ready for API integration!</p>
     </div>
 </body>
 </html>
