@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CONSTRUCT Function</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+        .header { color: #0078d4; margin-bottom: 20px; }
+        .info { background: #f3f2f1; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .example { background: #fff; border: 1px solid #edebe9; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        code { background: #f8f8f8; padding: 2px 4px; border-radius: 3px; font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>CONSTRUCT Function</h2>
+        <p>AI-powered text generation for Excel</p>
+    </div>
+    
+    <div class="info">
+        <h3>How to use:</h3>
+        <p>Use the CONSTRUCT function in any cell:</p>
+        <code>=CONSTRUCT.CONSTRUCT("user prompt", "system prompt")</code>
+    </div>
+    
+    <div class="example">
+        <h4>Basic Example:</h4>
+        <code>=CONSTRUCT.CONSTRUCT("What is AI?", "You are a helpful assistant")</code>
+    </div>
+    
+    <div class="example">
+        <h4>With Parameters:</h4>
+        <code>=CONSTRUCT.CONSTRUCT("Explain quantum computing", "You are a physics professor", 0.5, "direct", 500, "gpt-4")</code>
+    </div>
+    
+    <div class="info">
+        <h3>Parameters:</h3>
+        <ul>
+            <li><strong>userPrompt</strong> (required): Your question or prompt</li>
+            <li><strong>systemPrompt</strong> (required): Instructions for the AI</li>
+            <li><strong>temperature</strong> (optional): 0-2, controls randomness</li>
+            <li><strong>mode</strong> (optional): "direct", "model", or "optative_rag"</li>
+            <li><strong>maxTokens</strong> (optional): 1-4096, response length limit</li>
+            <li><strong>llmAlias</strong> (optional): Model to use</li>
+        </ul>
+    </div>
+</body>
+</html>

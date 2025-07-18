@@ -1,0 +1,48 @@
+{
+  "functions": [
+    {
+      "description": "AI-powered text generation using Constructor.app API",
+      "id": "CONSTRUCT",
+      "name": "CONSTRUCT",
+      "parameters": [
+        {
+          "description": "User prompt text",
+          "name": "userPrompt",
+          "type": "string"
+        },
+        {
+          "description": "System prompt text", 
+          "name": "systemPrompt",
+          "type": "string"
+        },
+        {
+          "description": "Temperature (0-2, optional)",
+          "name": "temperature",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "description": "Mode: direct, model, or optative_rag (optional)",
+          "name": "mode", 
+          "type": "string",
+          "optional": true
+        },
+        {
+          "description": "Max tokens (1-4096, optional)",
+          "name": "maxTokens",
+          "type": "number", 
+          "optional": true
+        },
+        {
+          "description": "LLM alias (optional)",
+          "name": "llmAlias",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "result": {
+        "type": "string"
+      }
+    }
+  ]
+}
