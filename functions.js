@@ -1,4 +1,4 @@
-// Configuration - MODIFY THESE VALUES BEFORE DEPLOYING
+
 const CONFIG = {
   defaultTemperature: 0.2,
   defaultMode: "direct",
@@ -24,6 +24,11 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
     // Special test mode - if userPrompt is "TEST", return test message
     if (userPrompt.toUpperCase() === "TEST") {
       return "✅ CONSTRUCT function is working perfectly! Ready for API integration.";
+    }
+    
+    // Debug mode - if userPrompt is "DEBUG", return config info
+    if (userPrompt.toUpperCase() === "DEBUG") {
+      return `Config: API Key ${CONFIG.apiKey ? 'SET' : 'NOT SET'}, Model ID ${CONFIG.knowledgeModelId ? 'SET' : 'NOT SET'}`;
     }
     
     // Check if we have required config
@@ -54,8 +59,8 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
       return "ERROR: Max tokens must be between 1 and 4096";
     }
     
-    // Make real API request
-    const result = await makeModelRequest(
+    // Make API request with detailed error reporting
+    const result = await makeModelRequestWithDebug(
       CONFIG.knowledgeModelId,
       CONFIG.apiKey,
       finalLlmAlias,
@@ -73,9 +78,9 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
 }
 
 /**
- * Make API request to Constructor.app with CORS handling
+ * Make API request with detailed debugging
  */
-async function makeModelRequest(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt) {
+async function makeModelRequestWithDebug(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt) {
   const endpoint = `https://training.constructor.app/api/platform-kmapi/v1/knowledge-models/${knowledgeModelId}/chat/completions`;
   
   const requestBody = {
@@ -108,8 +113,10 @@ async function makeModelRequest(knowledgeModelId, apiKey, modelId, temperature, 
     "stream": false
   };
   
+  // Try multiple approaches
+  
+  // Approach 1: Direct request
   try {
-    // Try direct request first
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -121,68 +128,109 @@ async function makeModelRequest(knowledgeModelId, apiKey, modelId, temperature, 
       mode: 'cors'
     });
     
+    const responseText = await response.text();
+    
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      throw new Error(`Direct request failed: HTTP ${response.status} - ${responseText}`);
     }
     
-    const responseData = await response.json();
+    const responseData = JSON.parse(responseText);
     
     if (responseData.choices && responseData.choices.length > 0) {
       return responseData.choices[0].message.content;
     } else {
-      throw new Error("No response from API");
+      throw new Error(`Direct request: Unexpected response format - ${JSON.stringify(responseData)}`);
     }
     
-  } catch (error) {
-    // If direct request fails due to CORS, try with a proxy
-    if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-      return await makeRequestWithProxy(endpoint, requestBody, apiKey);
+  } catch (directError) {
+    // Approach 2: Try different CORS proxy
+    try {
+      return await makeRequestWithCorsAnywhere(endpoint, requestBody, apiKey);
+    } catch (corsError) {
+      // Approach 3: Try another proxy
+      try {
+        return await makeRequestWithAllOrigins(endpoint, requestBody, apiKey);
+      } catch (allOriginsError) {
+        // Return detailed error information
+        return `DETAILED ERROR REPORT:
+Direct: ${directError.message}
+CORS Anywhere: ${corsError.message}
+AllOrigins: ${allOriginsError.message}`;
+      }
     }
-    throw error;
   }
 }
 
 /**
- * Fallback: Make request through CORS proxy
+ * Try with cors-anywhere proxy
  */
-async function makeRequestWithProxy(endpoint, requestBody, apiKey) {
-  try {
-    // Using allorigins.win as CORS proxy
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(endpoint)}`;
-    
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        method: 'POST',
-        headers: {
-          "X-KM-AccessKey": `Bearer ${apiKey}`,
-          "X-KM-Extension": "direct_llm",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Proxy request failed: ${response.status}`);
-    }
-    
-    const responseData = await response.json();
-    
-    if (responseData.choices && responseData.choices.length > 0) {
-      return responseData.choices[0].message.content;
-    } else {
-      throw new Error("No response from API via proxy");
-    }
-    
-  } catch (error) {
-    throw new Error(`Both direct and proxy requests failed: ${error.message}`);
+async function makeRequestWithCorsAnywhere(endpoint, requestBody, apiKey) {
+  const proxyUrl = `https://cors-anywhere.herokuapp.com/${endpoint}`;
+  
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      "X-KM-AccessKey": `Bearer ${apiKey}`,
+      "X-KM-Extension": "direct_llm",
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest"
+    },
+    body: JSON.stringify(requestBody)
+  });
+  
+  const responseText = await response.text();
+  
+  if (!response.ok) {
+    throw new Error(`CORS Anywhere: HTTP ${response.status} - ${responseText}`);
+  }
+  
+  const responseData = JSON.parse(responseText);
+  
+  if (responseData.choices && responseData.choices.length > 0) {
+    return responseData.choices[0].message.content;
+  } else {
+    throw new Error(`CORS Anywhere: Unexpected response - ${JSON.stringify(responseData)}`);
   }
 }
 
-// Register only the main function
+/**
+ * Try with allorigins proxy (different approach)
+ */
+async function makeRequestWithAllOrigins(endpoint, requestBody, apiKey) {
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(endpoint)}`;
+  
+  // Create a proper POST request through the proxy
+  const proxyResponse = await fetch('https://api.allorigins.win/get', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url: endpoint,
+      method: 'POST',
+      headers: {
+        "X-KM-AccessKey": `Bearer ${apiKey}`,
+        "X-KM-Extension": "direct_llm",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    })
+  });
+  
+  const proxyResult = await proxyResponse.json();
+  
+  if (!proxyResponse.ok || !proxyResult.contents) {
+    throw new Error(`AllOrigins proxy failed: ${proxyResult.status || 'Unknown error'}`);
+  }
+  
+  const responseData = JSON.parse(proxyResult.contents);
+  
+  if (responseData.choices && responseData.choices.length > 0) {
+    return responseData.choices[0].message.content;
+  } else {
+    throw new Error(`AllOrigins: Unexpected response - ${JSON.stringify(responseData)}`);
+  }
+}
+
+// Register the function
 CustomFunctions.associate("CONSTRUCT", CONSTRUCT);
