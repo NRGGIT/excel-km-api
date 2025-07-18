@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Excel CONSTRUCT Function</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header { color: #0078d4; margin-bottom: 30px; }
+        .download-btn { 
+            background: #0078d4; 
+            color: white; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .download-btn:hover { background: #106ebe; }
+        .code { 
+            background: #f8f8f8; 
+            padding: 15px; 
+            border-radius: 4px; 
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border-left: 4px solid #0078d4;
+        }
+        .step { 
+            background: #f3f2f1; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Excel CONSTRUCT Function</h1>
+            <p>AI-powered custom function for Excel Online</p>
+        </div>
+
+        <h2>📥 Installation</h2>
+        <div class="step">
+            <h3>Step 1: Download the manifest file</h3>
+            <a href="manifest.xml" class="download-btn" download>Download manifest.xml</a>
+            <p>Right-click and "Save link as..." if direct download doesn't work</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Install in Excel</h3>
+            <ol>
+                <li>Open Excel Online</li>
+                <li>Go to <strong>Insert</strong> → <strong>Add-ins</strong> → <strong>Get Add-ins</strong></li>
+                <li>Click <strong>Upload My Add-in</strong></li>
+                <li>Upload the downloaded manifest.xml file</li>
+            </ol>
+        </div>
+
+        <h2>🚀 Usage</h2>
+        <p>Once installed, use the function in any cell:</p>
+        
+        <div class="code">
+=CONSTRUCT.CONSTRUCT("What is AI?", "You are a helpful assistant")
+        </div>
+
+        <div class="code">
+=CONSTRUCT.CONSTRUCT("Explain quantum physics", "You are a physics professor", 0.7, "direct", 500, "gpt-4")
+        </div>
+
+        <h2>⚙️ Configuration</h2>
+        <p><strong>Important:</strong> Before using, you need to configure your API credentials in the functions.js file.</p>
+        
+        <h2>📋 Parameters</h2>
+        <ul>
+            <li><strong>userPrompt</strong> (required): Your question or prompt</li>
+            <li><strong>systemPrompt</strong> (required): Instructions for the AI</li>
+            <li><strong>temperature</strong> (optional): 0-2, controls randomness (default: 0.7)</li>
+            <li><strong>mode</strong> (optional): "direct", "model", or "optative_rag" (default: "direct")</li>
+            <li><strong>maxTokens</strong> (optional): 1-4096, response length limit (default: 1000)</li>
+            <li><strong>llmAlias</strong> (optional): Model to use (default: "gpt-4")</li>
+        </ul>
+
+        <h2>🔧 Files</h2>
+        <ul>
+            <li><a href="manifest.xml">manifest.xml</a> - Add-in manifest</li>
+            <li><a href="functions.js">functions.js</a> - Function implementation</li>
+            <li><a href="functions.json">functions.json</a> - Function metadata</li>
+            <li><a href="functions.html">functions.html</a> - Function runtime</li>
+            <li><a href="taskpane.html">taskpane.html</a> - Task pane UI</li>
+        </ul>
+    </div>
+</body>
+</html>

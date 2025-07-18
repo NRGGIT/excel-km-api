@@ -12,7 +12,7 @@
   <Description DefaultValue="AI-powered Excel custom function"/>
   <IconUrl DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/icon-64.png"/>
-  <SupportUrl DefaultValue="https://github.com/YOUR_USERNAME/excel-construct-function"/>
+  <SupportUrl DefaultValue="https://YOUR_USERNAME.github.io/excel-construct-function/"/>
   <AppDomains>
     <AppDomain>https://YOUR_USERNAME.github.io</AppDomain>
   </AppDomains>
