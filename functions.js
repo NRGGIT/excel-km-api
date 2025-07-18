@@ -23,7 +23,7 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
   try {
     // Special test mode
     if (userPrompt.toUpperCase() === "TEST") {
-      return "✅ CONSTRUCT function is working perfectly!";
+      return "✅ CONSTRUCT function is working perfectly! v5";
     }
     
     // Check if we have required config
