@@ -40,8 +40,17 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
       return "ERROR: Max tokens must be between 1 and 4096";
     }
     
-    // Make API request
-    const result = await makeModelRequest(
+    // Check if we have required config
+    if (!CONFIG.apiKey || CONFIG.apiKey === "YOUR_API_KEY_HERE") {
+      return "ERROR: API key not configured";
+    }
+    
+    if (!CONFIG.knowledgeModelId || CONFIG.knowledgeModelId === "YOUR_KNOWLEDGE_MODEL_ID_HERE") {
+      return "ERROR: Knowledge model ID not configured";
+    }
+    
+    // Make API request with better error handling
+    const result = await makeModelRequestWithRetry(
       CONFIG.knowledgeModelId,
       CONFIG.apiKey,
       finalLlmAlias,
@@ -59,18 +68,12 @@ async function CONSTRUCT(userPrompt, systemPrompt, temperature, mode, maxTokens,
 }
 
 /**
- * Make API request to Constructor.app
+ * Make API request with retry logic and better error handling
  */
-async function makeModelRequest(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt) {
+async function makeModelRequestWithRetry(knowledgeModelId, apiKey, modelId, temperature, maxTokens, systemPrompt, userPrompt, retries = 2) {
   const endpoint = `https://training.constructor.app/api/platform-kmapi/v1/knowledge-models/${knowledgeModelId}/chat/completions`;
   
-  const headers = {
-    "X-KM-AccessKey": `Bearer ${apiKey}`,
-    "X-KM-Extension": "direct_llm",
-    "Content-Type": "application/json"
-  };
-  
-  const body = {
+  const requestBody = {
     "model": modelId,
     "messages": [
       {
@@ -100,28 +103,47 @@ async function makeModelRequest(knowledgeModelId, apiKey, modelId, temperature, 
     "stream": false
   };
   
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(body)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      "X-KM-AccessKey": `Bearer ${apiKey}`,
+      "X-KM-Extension": "direct_llm",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(requestBody),
+    mode: 'cors', // Explicitly set CORS mode
+    credentials: 'omit' // Don't send credentials
+  };
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(endpoint, requestOptions);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const responseData = await response.json();
+      
+      if (responseData.choices && responseData.choices.length > 0) {
+        return responseData.choices[0].message.content;
+      } else {
+        throw new Error("No response from API");
+      }
+      
+    } catch (error) {
+      if (attempt === retries) {
+        // Last attempt failed
+        if (error.message.includes('Failed to fetch')) {
+          throw new Error('Network error: Check your internet connection and API endpoint. CORS may be blocking the request.');
+        }
+        throw error;
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
     }
-    
-    const responseData = await response.json();
-    
-    if (responseData.choices && responseData.choices.length > 0) {
-      return responseData.choices[0].message.content;
-    } else {
-      throw new Error("No response from API");
-    }
-    
-  } catch (error) {
-    throw new Error(`API request failed: ${error.message}`);
   }
 }
 
